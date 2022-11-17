@@ -1,22 +1,17 @@
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class Main {
-    private static void inputTask(Scanner scanner) throws ParseException {
+    private static void inputTask(Scanner scanner) {
         System.out.print("Введите название задачи: ");
         String taskName = scanner.next();
         System.out.print("Введите описание задачу: ");
         String taskDesc = scanner.next();
-        System.out.print("Укажите дату выполнения(в формате день.месяц.год): ");
+        System.out.print("Укажите дату выполнения(в формате день.месяц.год/час:минута): ");
         String stringDate = scanner.next();
-        Date date = new Date();
-        SimpleDateFormat format = new SimpleDateFormat();
-        format.applyPattern("dd.MM.yyyy");
-        date = format.parse(stringDate);
-        System.out.print("Укажите время выполнения(час в 24-часовом формате): ");
-        date.setHours(scanner.nextInt());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy/HH:mm");
+        LocalDateTime date = LocalDateTime.parse(stringDate, formatter);
         System.out.print("Укажите тип задачи(1 - если личная, 2 - если рабочая, по умолчанию выставляется личная): ");
         int taskType = scanner.nextInt();
         System.out.print("Укажите повторяемость задачи(0 - неповторяемая, 1 - ежедневная, 2 - еженедельная, " +
@@ -24,37 +19,35 @@ public class Main {
         int taskRepeatability = scanner.nextInt();
         switch (taskRepeatability) {
             case 0:
-                Task.addToList(new Task<>(taskName, taskDesc, taskType, date));
+                Schedule.addToList(new Task.NoRepeat(taskName, taskDesc, taskType, date));
                 break;
             case 1:
-                Task.addToList(new Task<Task.DailyRepeat>(taskName, taskDesc, taskType, date));
+                Schedule.addToList(new Task.DailyRepeat(taskName, taskDesc, taskType, date));
                 break;
             case 2:
-                Task.addToList(new Task<Task.WeeklyRepeat>(taskName, taskDesc, taskType, date));
+                Schedule.addToList(new Task.WeeklyRepeat(taskName, taskDesc, taskType, date));
                 break;
             case 3:
-                Task.addToList(new Task<Task.MonthlyRepeat>(taskName, taskDesc, taskType, date));
+                Schedule.addToList(new Task.MonthlyRepeat(taskName, taskDesc, taskType, date));
                 break;
             case 4:
-                Task.addToList(new Task<Task.YearlyRepeat>(taskName, taskDesc, taskType, date));
+                Schedule.addToList(new Task.YearlyRepeat(taskName, taskDesc, taskType, date));
                 break;
         }
-        System.out.print("Задача " + taskName + " добавлена!");
+        System.out.println("Задача " + taskName + " добавлена!");
     }
 
     public static void deleteTask(Scanner scanner) {
         System.out.print("Введите ID задачи: ");
-        Task.deleteFromList(scanner.nextInt());
+        Schedule.deleteFromList(scanner.nextInt());
     }
 
-    public static void checkTasks(Scanner scanner) throws ParseException{
+    public static void checkTasks(Scanner scanner) {
         System.out.print("Введите дату: ");
-        String stringDate = scanner.next();
-        Date date = new Date();
-        SimpleDateFormat format = new SimpleDateFormat();
-        format.applyPattern("dd.MM.yyyy");
-        date = format.parse(stringDate);
-        Task.checkTasks(date);
+        String stringDate = scanner.next() + "/00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy/HH:mm");
+        LocalDateTime date = LocalDateTime.parse(stringDate, formatter);
+        Schedule.checkTasks(date);
     }
 
     private static void printMenu() {
@@ -74,21 +67,13 @@ public class Main {
                     int menu = scanner.nextInt();
                     switch (menu) {
                         case 1:
-                            try {
-                                inputTask(scanner);
-                                break;
-                            } catch (ParseException e) {
-                                System.out.println("Не удалось добавить задачу");
-                            }
+                            inputTask(scanner);
+                            break;
                         case 2:
                             deleteTask(scanner);
                             break;
                         case 3:
-                            try {
                                 checkTasks(scanner);
-                            } catch (ParseException e) {
-                                System.out.println("Не удалось получить задачи на указанный день");
-                            }
                             break;
                         case 0:
                             break label;
